@@ -1,7 +1,16 @@
+const http = require('http');
 const WebSocket = require('ws');
 
 const PORT = process.env.PORT || 8080;
-const server = new WebSocket.Server({ port: PORT });
+
+// Creează server HTTP (necesar pentru Render)
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('RestaurantPOS Server is running!');
+});
+
+// Atașează WebSocket la serverul HTTP
+const wss = new WebSocket.Server({ server });
 
 let orderCounter = 0;
 let connectedClients = { order: 0, kitchen: 0 };
@@ -10,10 +19,10 @@ console.log('══════════════════════�
 console.log('   🍔 RestaurantPOS Server (CLOUD)');
 console.log('═══════════════════════════════════════════');
 console.log('   Port: ' + PORT);
-console.log('   Status: RUNNING');
+console.log('   Status: STARTING...');
 console.log('═══════════════════════════════════════════');
 
-server.on('connection', (socket, req) => {
+wss.on('connection', (socket, req) => {
     console.log('✅ Client conectat!');
 
     socket.send(JSON.stringify({
@@ -76,55 +85,17 @@ server.on('connection', (socket, req) => {
 
 function broadcast(message) {
     const data = JSON.stringify(message);
-    server.clients.forEach((client) => {
+    wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
             client.send(data);
         }
     });
 }
 
-console.log('🌐 Server gata pentru conexiuni!');
-```
-
-Click **"Commit changes"**
-
----
-
-## Pasul 3: Conectează la Render
-
-Acum în **Render.com**:
-
-1. Click pe **"Deploy a Web Service"** (sau **+ New** → **Web Service**)
-
-2. **Connect a repository:**
-   - Click **"Connect GitHub"**
-   - Autorizează Render să vadă repo-urile tale
-   - Selectează **restaurantpos-server**
-
-3. **Configurează:**
-```
-   Name: restaurantpos-server
-   Region: Frankfurt (EU Central)
-   Branch: main
-   Runtime: Node
-   Build Command: npm install
-   Start Command: npm start
-   Instance Type: Free
-```
-
-4. Click **"Create Web Service"**
-
-5. **Așteaptă 2-3 minute...**
-
----
-
-## Pasul 4: Obține URL-ul
-
-După deploy, vei primi un URL:
-```
-https://restaurantpos-server.onrender.com
-```
-
-**Pentru WebSocket:**
-```
-wss://restaurantpos-server.onrender.com
+// Pornește serverul HTTP
+server.listen(PORT, () => {
+    console.log('═══════════════════════════════════════════');
+    console.log('   ✅ Server LIVE pe portul ' + PORT);
+    console.log('   🌐 Gata pentru conexiuni!');
+    console.log('═══════════════════════════════════════════');
+});

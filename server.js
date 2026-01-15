@@ -52,7 +52,8 @@ wss.on('connection', (socket, req) => {
                     message.orderNumber = orderCounter;
                     message.time = new Date().toLocaleTimeString('ro-RO', { 
                         hour: '2-digit', 
-                        minute: '2-digit' 
+                        minute: '2-digit',
+                        timeZone: 'Europe/Bucharest'
                     });
                     console.log('   → 🆕 COMANDA #' + orderCounter);
                     broadcast(message);
